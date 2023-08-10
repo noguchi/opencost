@@ -3,7 +3,6 @@ package kubecost
 import (
 	"time"
 
-	"github.com/opencost/opencost/pkg/filter"
 	"github.com/opencost/opencost/pkg/log"
 )
 
@@ -108,24 +107,4 @@ func (cs *CoverageSet) Insert(coverage *Coverage) {
 		cs.Items = map[string]*Coverage{}
 	}
 	cs.Items[coverage.Key()] = coverage
-}
-
-func (cs *CoverageSet) Filter(filters filter.Filter[*Coverage]) *CoverageSet {
-	if cs == nil {
-		return nil
-	}
-
-	if filters == nil {
-		return cs.Clone()
-	}
-
-	result := NewCoverageSet(*cs.Window.start, *cs.Window.end)
-
-	for _, c := range cs.Items {
-		if filters.Matches(c) {
-			result.Insert(c.Clone())
-		}
-	}
-
-	return result
 }
