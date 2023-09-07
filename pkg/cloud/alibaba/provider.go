@@ -448,6 +448,10 @@ func (alibaba *Alibaba) DownloadPricingData() error {
 		slimK8sNode.SystemDisk = getSystemDiskInfoOfANode(instanceID, slimK8sNode.RegionID, client, signer)
 
 		lookupKey, err = determineKeyForPricing(slimK8sNode)
+		if err != nil {
+			return fmt.Errorf("unable to determine key for pricing: %w", err)
+		}
+
 		if _, ok := alibaba.Pricing[lookupKey]; ok {
 			log.Debugf("Pricing information for node with same features %s already exists hence skipping", lookupKey)
 			continue
@@ -484,6 +488,9 @@ func (alibaba *Alibaba) DownloadPricingData() error {
 		pricingObj := &AlibabaPricing{}
 		slimK8sDisk := generateSlimK8sDiskFromV1PV(pv, pvRegion)
 		lookupKey, err = determineKeyForPricing(slimK8sDisk)
+		if err != nil {
+			return fmt.Errorf("unable to determine key for pricing: %w", err)
+		}
 		if _, ok := alibaba.Pricing[lookupKey]; ok {
 			log.Debugf("Pricing information for pv with same features %s already exists hence skipping", lookupKey)
 			continue
@@ -725,7 +732,7 @@ func (alibaba *Alibaba) UpdateConfig(r io.Reader, updateType string) (*models.Cu
 				if ok {
 					err := models.SetCustomPricingField(c, kUpper, vstr)
 					if err != nil {
-						return err
+						return fmt.Errorf("error setting custom pricing field: %w", err)
 					}
 				} else {
 					return fmt.Errorf("type error while updating config for %s", kUpper)
