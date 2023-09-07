@@ -142,7 +142,7 @@ spec:
       restartPolicy: Always
       serviceAccountName: opencost
       containers:
-        - image: quay.io/kubecost1/kubecost-cost-model:latest
+        - image: quay.io/kubecost1/kubecost-cost-model:1.105.2
           name: opencost
           resources:
             requests:
@@ -167,7 +167,7 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
             runAsUser: 1001
-        - image: quay.io/kubecost1/opencost-ui:latest
+        - image: quay.io/kubecost1/opencost-ui:1.105.2
           name: opencost-ui
           resources:
             requests:
@@ -201,3 +201,52 @@ spec:
       port: 9090
       targetPort: 9090
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: prometheus
+  name: opencost-prometheus-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "cloudflare-letsencrypt"
+spec:
+  ingressClassName: "nginx"
+  tls:
+  - hosts:
+    - opencost-prometheus.cluster.noguchi.me
+    secretName: opencost-prometheus-ingress-tls
+  rules:
+  - host: opencost-prometheus.cluster.noguchi.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-prometheus-server
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: opencost
+  name: opencost-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "cloudflare-letsencrypt"
+spec:
+  ingressClassName: "nginx"
+  tls:
+  - hosts:
+    - opencost.cluster.noguchi.me
+    secretName: opencost-ingress-tls
+  rules:
+  - host: opencost.cluster.noguchi.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: opencost
+            port:
+              number: 9090
